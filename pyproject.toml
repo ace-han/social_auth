@@ -1,0 +1,8 @@
+[build-system]
+requires = [
+    # I need entry_points feature
+    # https://setuptools.readthedocs.io/en/latest/userguide/declarative_config.html#options
+    "setuptools>=51", 
+    "wheel"
+]
+build-backend = "setuptools.build_meta"
