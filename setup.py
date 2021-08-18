@@ -1,6 +1,8 @@
 from setuptools import setup
 
-install_requires = []
+install_requires = [
+    'social-auth-app-django',
+]
 
 setup(
     name="social_auth",
