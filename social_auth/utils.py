@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 from django.core.cache import cache
 from django.core.exceptions import ValidationError
 
-from social_core.utils import sanitize_redirect
+from social_core.utils import partial_pipeline_data, sanitize_redirect, user_is_active, user_is_authenticated
 
 from saleor.core.utils import build_absolute_uri
 from saleor.core.utils.url import prepare_url, validate_storefront_url
@@ -47,6 +47,7 @@ def prepare_redirect_url(
 
 
 def do_auth(backend, redirect_name='next'):
+    # ======no need, since it's an spa application=====
     # copy from `social_core.actions:do_auth`
     # Save any defined next value into session
     data = backend.strategy.request_data(merge=False)
@@ -69,3 +70,40 @@ def do_auth(backend, redirect_name='next'):
             redirect_name,
             redirect_uri or backend.setting('LOGIN_REDIRECT_URL')
         )
+
+
+def do_complete(backend, login, user=None,
+                *args, **kwargs):
+    is_authenticated = user_is_authenticated(user)
+    user = user if is_authenticated else None
+
+    partial = partial_pipeline_data(backend, user, *args, **kwargs)
+    if partial:
+        user = backend.continue_pipeline(partial)
+        # clean partial data after usage
+        backend.strategy.clean_partial_pipeline(partial.token)
+    else:
+        user = backend.complete(user=user, *args, **kwargs)
+
+    # check if the output value is something else than a user and just
+    # return it to the client
+    user_model = backend.strategy.storage.user.user_model()
+    if user and not isinstance(user, user_model):
+        # raise an error here in our graphql situation
+        return user
+
+    if user:
+        if user_is_active(user):
+            # catch is_new/social_user in case login() resets the instance
+            social_user = user.social_user
+            login(backend, user, social_user)
+            # store last login backend name in session
+            backend.strategy.session_set('social_auth_last_login_backend',
+                                         social_user.provider)
+
+        else:
+            if backend.setting('INACTIVE_USER_LOGIN', False):
+                social_user = user.social_user
+                login(backend, user, social_user)
+    return user
+

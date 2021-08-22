@@ -5,15 +5,15 @@ from social_django.strategy import DjangoStrategy
 
 class SaleorPluginStrategy(DjangoStrategy):
 
-    def __init__(self, settings, request_data, *args, **kwargs):
+    def __init__(self, storage, settings, request_data, *args, **kwargs):
         # loading settings from dashboard admin
         self.settings = settings
         self.req_data = request_data
-        super().__init__(*args, **kwargs)
+        super().__init__(storage, *args, **kwargs)
 
     def get_setting(self, name):
         # copy from social_django.strategy.DjangoStrategy
-        value = getattr(self.settings, name)
+        value = self.settings[name]
         # Force text on URL named settings that are instance of Promise
         if name.endswith('_URL'):
             if isinstance(value, Promise):
@@ -21,6 +21,7 @@ class SaleorPluginStrategy(DjangoStrategy):
             value = resolve_url(value)
         return value
 
-    def request_data(self):
+    def request_data(self, merge=True):
         # graphql may not include query_string or data in request directly
         return self.req_data
+
