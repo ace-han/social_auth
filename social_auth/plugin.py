@@ -178,7 +178,8 @@ class SocialAuthPlugin(BasePlugin):
         return ExternalAccessTokens(
             token=access_token, 
             refresh_token=refresh_token, 
-            csrf_token=csrf_token
+            csrf_token=csrf_token,
+            user=user,
         )
 
     def request_data(self, request: WSGIRequest, merge=True):
