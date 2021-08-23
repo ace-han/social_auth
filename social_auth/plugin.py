@@ -1,8 +1,10 @@
 import logging
+from saleor.graphql.account.mutations.authentication import RefreshToken, VerifyToken
+from typing import Optional, Tuple
 
 from django.contrib.sessions.backends.db import SessionStore
 from django.core.exceptions import ValidationError
-from saleor.core.jwt import create_access_token, create_refresh_token
+from saleor.core.jwt import JWT_REFRESH_TOKEN_COOKIE_NAME, create_access_token, create_refresh_token
 
 import yaml
 from django.contrib.auth import REDIRECT_FIELD_NAME
@@ -194,3 +196,45 @@ class SocialAuthPlugin(BasePlugin):
         else:
             data = request.GET
         return data
+
+    def external_refresh(
+        self, data: dict, request: WSGIRequest, previous_value
+    ) -> ExternalAccessTokens:
+        # utilize existing code
+        # create an object that can have arbitrary attrs, refer to 
+        # https://stackoverflow.com/questions/2280334/shortest-way-of-creating-an-object-with-arbitrary-attributes-in-python
+        # info = type('', (), {})()
+        # info.context = request
+        # request = info.context
+        # refresh_token = RefreshToken.get_refresh_token(info, data)
+
+        refresh_token = request.COOKIES.get(JWT_REFRESH_TOKEN_COOKIE_NAME, None)
+        # for the time being,  should be data.get('refreshToken')
+        # refresh_token = data.get("refresh_token") or refresh_token
+        # this refresh_token_code comes from 
+        # `saleor-dashboard/src/auth/hooks/useExternalAuthProvider.ts`
+        # const token = getTokens().refresh;
+        # const input = JSON.stringify({
+        #   refreshToken: token
+        # });
+        # return tokenRefresh({ variables: { input, pluginId: authPlugin } }).then(...)
+        refresh_token_code = 'refreshToken'
+        refresh_token = data.get(refresh_token_code) or refresh_token
+        payload = RefreshToken.clean_refresh_token(refresh_token)
+
+        # None when we got refresh_token from cookie.
+        if not data.get(refresh_token_code):
+            csrf_token = data.get("csrf_token")
+            RefreshToken.clean_csrf_token(csrf_token, payload)
+
+        user = RefreshToken.get_user(payload)
+        token = create_access_token(user)
+        return RefreshToken(errors=[], user=user, token=token)
+
+    def external_verify(
+        self, data: dict, request: WSGIRequest, previous_value
+    ) -> Tuple[Optional["User"], dict]:
+        # utilize existing code
+        payload = VerifyToken.get_payload(data['token'])
+        user = VerifyToken.get_user(payload)
+        return user, payload
