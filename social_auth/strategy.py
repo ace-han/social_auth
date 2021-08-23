@@ -25,3 +25,10 @@ class SaleorPluginStrategy(DjangoStrategy):
         # graphql may not include query_string or data in request directly
         return self.req_data
 
+    def authenticate(self, backend, *args, **kwargs):
+        kwargs['strategy'] = self
+        kwargs['storage'] = self.storage
+        kwargs['backend'] = backend
+        # we need to assign request as `args` first element according to debug
+        args = args + (kwargs.pop('request'), )
+        return backend.authenticate(*args, **kwargs)
