@@ -2,6 +2,7 @@ from setuptools import setup
 
 install_requires = [
     'social-auth-app-django',
+    'python-weixin',
 ]
 
 # copy from `python-social-auth` social-core/setup.py
