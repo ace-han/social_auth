@@ -1,5 +1,6 @@
 from collections import OrderedDict
 import logging
+import time
 from django.apps import apps, AppConfig
 from django.conf import settings
 from django.core import management
@@ -25,6 +26,8 @@ class SocialAuthConfig(AppConfig):
             apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
             apps.clear_cache()
             apps.populate(settings.INSTALLED_APPS)
-            for patch_app_name in patch_app_names:
-                management.call_command('migrate', patch_app_name.rsplit('.', maxsplit=1)[-1], interactive=False)
-            # management.call_command('migrate', interactive=False)
+            start_time = time.time()
+            # for patch_app_name in patch_app_names:
+            #     management.call_command('migrate', patch_app_name.rsplit('.', maxsplit=1)[-1], interactive=False)
+            management.call_command('migrate', interactive=False)
+            logger.info('python manage.py migrate %s, elasped: %s sec', patch_app_names, time.time() - start_time)
