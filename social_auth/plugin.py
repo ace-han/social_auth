@@ -17,6 +17,7 @@ from saleor.plugins.base_plugin import BasePlugin, ConfigurationTypeField, Exter
 from . import (
     CONFIG_CODE,
     DEFAULT_BACKEND_CODE,
+    EXCHANGE_REDIRECT_URI_CODE,
     SOCIAL_STRATEGY_CODE,
     SOCIAL_STORAGE_CODE,
 )
@@ -101,7 +102,7 @@ class SocialAuthPlugin(BasePlugin):
             raise TypeError(f'`settings` or `req_data` {strategy_class_str} instance are not accessible')
         return strategy
 
-    def load_backend(self, strategy: DjangoStrategy, name: str, redirect_uri=None) -> DjangoStrategy:
+    def load_backend(self, strategy: DjangoStrategy, name: str, redirect_uri: str) -> DjangoStrategy:
         return strategy.get_backend(name, redirect_uri=redirect_uri)
 
     # @patch_session_to_request
@@ -121,7 +122,7 @@ class SocialAuthPlugin(BasePlugin):
         backend = self.load_backend(
             strategy,
             backend_str,
-            redirect_uri=storefront_redirect_url
+            storefront_redirect_url
         )
         if not backend.uses_redirect():
             # for the time being, we only support backend whose`.uses_redirect() == True`
@@ -131,6 +132,8 @@ class SocialAuthPlugin(BasePlugin):
         do_auth(backend, redirect_name=REDIRECT_FIELD_NAME)
         auth_url = backend.auth_url()
 
+        # save redirect_uri in session for later exchange code request for access token and id token
+        strategy.session_set(EXCHANGE_REDIRECT_URI_CODE, storefront_redirect_url)
         # make session_key as state_token for `external_obtain_access_tokens` retrieval
         state_token = backend.get_session_state()
         session._session_key = state_token
@@ -149,11 +152,13 @@ class SocialAuthPlugin(BasePlugin):
             raise ValidationError('Missing needed parameter `state`')
         session = request.session = SessionStore(session_key=state_token)
         strategy = self.load_strategy(data, request)
+        redirect_uri = strategy.session_get(EXCHANGE_REDIRECT_URI_CODE)
 
         backend_str = data.get('backend') or getattr(self, DEFAULT_BACKEND_CODE, '')
         backend = self.load_backend(
             strategy,
-            backend_str
+            backend_str,
+            redirect_uri
         )
         user = do_complete(backend, _do_login, user=request.user, request=request)
 
@@ -171,7 +176,9 @@ class SocialAuthPlugin(BasePlugin):
         # session is not need any more under spa
         session.delete()
         return ExternalAccessTokens(
-            token=access_token, refresh_token=refresh_token, csrf_token=csrf_token
+            token=access_token, 
+            refresh_token=refresh_token, 
+            csrf_token=csrf_token
         )
 
     def request_data(self, request: WSGIRequest, merge=True):
