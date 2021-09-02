@@ -147,10 +147,10 @@ class SocialAuthPlugin(BasePlugin):
     def external_obtain_access_tokens(
         self, data: dict, request: WSGIRequest, previous_value
     ) -> ExternalAccessTokens:
-        # data['code'], data['state']
+        # data['code'], data['state'], data['backend']
         # token = self.oauth.fetch_access_token()
         state_token = data.get('state')
-        if not state_token:
+        if state_token is None:
             raise ValidationError('Missing needed parameter `state`')
         session = request.session = SessionStore(session_key=state_token)
         strategy = self.load_strategy(data, request)
