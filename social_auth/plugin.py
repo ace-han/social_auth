@@ -209,22 +209,27 @@ class SocialAuthPlugin(BasePlugin):
         # refresh_token = RefreshToken.get_refresh_token(info, data)
 
         refresh_token = request.COOKIES.get(JWT_REFRESH_TOKEN_COOKIE_NAME, None)
-        # for the time being,  should be data.get('refreshToken')
+        # for the time being,  should be data.get('refresh_token')
         # refresh_token = data.get("refresh_token") or refresh_token
         # this refresh_token_code comes from 
+        # `saleor/graphql/account/mutations/authentication.py`
+        # class RefreshToken(BaseMutation):
+        #     class Arguments:
+        #         refresh_token = graphene.String(required=False, description="Refresh token.")
+        # although in the frontend it's `refreshToken` graphene will transform to `refresh_token`
         # `saleor-dashboard/src/auth/hooks/useExternalAuthProvider.ts`
         # const token = getTokens().refresh;
         # const input = JSON.stringify({
         #   refreshToken: token
         # });
         # return tokenRefresh({ variables: { input, pluginId: authPlugin } }).then(...)
-        refresh_token_code = 'refreshToken'
+        refresh_token_code = 'refresh_token'
         refresh_token = data.get(refresh_token_code) or refresh_token
         payload = RefreshToken.clean_refresh_token(refresh_token)
 
         # None when we got refresh_token from cookie.
         if not data.get(refresh_token_code):
-            csrf_token = data.get("csrf_token")
+            csrf_token = data.get(refresh_token_code)
             RefreshToken.clean_csrf_token(csrf_token, payload)
 
         user = RefreshToken.get_user(payload)
