@@ -16,7 +16,7 @@ social_core_extras_require={
     ]
 }
 
-setu(
+setup(
     name="social_auth",
     version="0.1.0",
     packages=["social_auth"],
