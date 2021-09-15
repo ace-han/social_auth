@@ -16,13 +16,31 @@ social_core_extras_require={
     ]
 }
 
+README = 'file README.md'
+with open("README.md") as readme:
+    README = readme.read()
+
 setup(
-    name="social_auth",
+    name="saleor-social-auth",
     version="0.1.0",
+    description="Social auth plugin (wx, alipay & etc.) for Saleor",
+    long_description=README,
+    long_description_content_type="text/markdown",
+    url="https://github.com/ace-han/social_auth",
+    author="Ace Han",
+    author_email="ace.jl.han@gmail.com",
+    license="MIT",
+    classifiers=[
+        "License :: OSI Approved :: MIT License",
+        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 3.9",
+        "Operating System :: OS Independent",
+    ],
     packages=["social_auth"],
     package_dir={"social_auth": "social_auth"},
     install_requires=install_requires,
     extras_require=social_core_extras_require,
+    zip_safe=True,
     entry_points={
         "saleor.plugins": ["social_auth = social_auth.plugin:SocialAuthPlugin"]
     },
