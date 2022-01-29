@@ -30,3 +30,16 @@ SOCIAL_AUTH_WEIXIN_WEAPP_SECRET: YOUR_WEAPP_SECRET
 ```
 
 ![image](https://user-images.githubusercontent.com/1177332/150488501-89138aad-191d-43ef-8435-69729736b2ce.png)
+
+## Env Props
+
+```shell
+# before `python manage.py migrate` 
+export SOCIAL_AUTH_INIT=true
+# it may trigger `migrate` twice, but it's acceptable...
+python manage.py migrate
+
+unset SOCIAL_AUTH_INIT
+# you can run any django command without the extra(time-consuming) db init stuff of this plugin from now on
+python manage.py runserver
+```
