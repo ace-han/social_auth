@@ -6,13 +6,13 @@ from django.apps import apps, AppConfig
 from django.conf import settings
 from django.core import management
 
-logger = logging.getLogger('saleor')
+logger = logging.getLogger(__name__)
 
 class SocialAuthConfig(AppConfig):
     name = 'social_auth'
     verbose_name = "Social Auth"
 
-    def do_init_stuff(self):
+    def do_db_init_stuff(self):
         patch_app_names = ('social_django', 'django.contrib.sessions', )
         patch_app_installed = apps.is_installed(patch_app_names[0])
 
@@ -34,8 +34,11 @@ class SocialAuthConfig(AppConfig):
             logger.info('python manage.py migrate %s, elasped: %s sec', patch_app_names, time.time() - start_time)
 
     def ready(self):
-        init_str = os.environ.get("SOCIAL_AUTH_INIT") or ''
+        init_str = os.environ.get("SOCIAL_AUTH_DB_INIT") or ''
         if init_str.lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'certainly', 'uh-huh']:
-            self.do_init_stuff()
+            self.do_db_init_stuff()
         else:
-            logger.info('SocialAuthConfig no init')
+            logger.info(
+                'SocialAuthConfig no db init. \n'
+                'Try setting env variable `SOCIAL_AUTH_DB_INIT=true` to do the db init stuff.'
+            )
