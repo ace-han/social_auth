@@ -13,6 +13,13 @@ class SocialAuthConfig(AppConfig):
     verbose_name = "Social Auth"
 
     def do_db_init_stuff(self):
+        start_time = time.time()
+        # for patch_app_name in patch_app_names:
+        #     management.call_command('migrate', patch_app_name.rsplit('.', maxsplit=1)[-1], interactive=False)
+        management.call_command('migrate', interactive=False)
+        logger.info('python manage.py migrate %s, elasped: %s sec', patch_app_names, time.time() - start_time)
+
+    def ready(self):
         patch_app_names = ('social_django', 'django.contrib.sessions', )
         patch_app_installed = apps.is_installed(patch_app_names[0])
 
@@ -27,13 +34,7 @@ class SocialAuthConfig(AppConfig):
             apps.apps_ready = apps.models_ready = apps.loading = apps.ready = False
             apps.clear_cache()
             apps.populate(settings.INSTALLED_APPS)
-            start_time = time.time()
-            # for patch_app_name in patch_app_names:
-            #     management.call_command('migrate', patch_app_name.rsplit('.', maxsplit=1)[-1], interactive=False)
-            management.call_command('migrate', interactive=False)
-            logger.info('python manage.py migrate %s, elasped: %s sec', patch_app_names, time.time() - start_time)
 
-    def ready(self):
         init_str = os.environ.get("SOCIAL_AUTH_DB_INIT") or ''
         if init_str.lower() in ['true', '1', 't', 'y', 'yes', 'yeah', 'yup', 'certainly', 'uh-huh']:
             self.do_db_init_stuff()
