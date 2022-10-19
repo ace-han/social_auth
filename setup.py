@@ -22,7 +22,7 @@ with open("README.md") as readme:
 
 setup(
     name="saleor-social-auth",
-    version="0.4.0",
+    version="0.5.0",
     description="Social auth plugin (wx, alipay & etc.) for Saleor",
     long_description=README,
     long_description_content_type="text/markdown",
