@@ -9,12 +9,12 @@ from saleor.core.jwt import JWT_REFRESH_TOKEN_COOKIE_NAME, create_access_token, 
 import yaml
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.core.handlers.wsgi import WSGIRequest
-from django.middleware.csrf import _get_new_csrf_token
 
 from social_django.strategy import DjangoStrategy
 from social_django.views import _do_login
 from social_core.utils import get_strategy
 
+from saleor.graphql.account.mutations.authentication import _get_new_csrf_token
 from saleor.plugins.base_plugin import BasePlugin, ConfigurationTypeField, ExternalAccessTokens
 from . import (
     CONFIG_CODE,
@@ -178,8 +178,8 @@ class SocialAuthPlugin(BasePlugin):
         # session is not need any more under spa
         session.delete()
         return ExternalAccessTokens(
-            token=access_token, 
-            refresh_token=refresh_token, 
+            token=access_token,
+            refresh_token=refresh_token,
             csrf_token=csrf_token,
             user=user,
         )
@@ -201,7 +201,7 @@ class SocialAuthPlugin(BasePlugin):
         self, data: dict, request: WSGIRequest, previous_value
     ) -> ExternalAccessTokens:
         # utilize existing code
-        # create an object that can have arbitrary attrs, refer to 
+        # create an object that can have arbitrary attrs, refer to
         # https://stackoverflow.com/questions/2280334/shortest-way-of-creating-an-object-with-arbitrary-attributes-in-python
         # info = type('', (), {})()
         # info.context = request
@@ -211,7 +211,7 @@ class SocialAuthPlugin(BasePlugin):
         refresh_token = request.COOKIES.get(JWT_REFRESH_TOKEN_COOKIE_NAME, None)
         # for the time being,  should be data.get('refresh_token')
         # refresh_token = data.get("refresh_token") or refresh_token
-        # this refresh_token_code comes from 
+        # this refresh_token_code comes from
         # `saleor/graphql/account/mutations/authentication.py`
         # class RefreshToken(BaseMutation):
         #     class Arguments:
