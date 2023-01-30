@@ -1,5 +1,5 @@
 from django.shortcuts import resolve_url
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from django.utils.functional import Promise
 from social_django.strategy import DjangoStrategy
 
@@ -17,7 +17,7 @@ class SaleorPluginStrategy(DjangoStrategy):
         # Force text on URL named settings that are instance of Promise
         if name.endswith('_URL'):
             if isinstance(value, Promise):
-                value = force_text(value)
+                value = force_str(value)
             value = resolve_url(value)
         return value
 
