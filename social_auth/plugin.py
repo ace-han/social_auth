@@ -199,7 +199,7 @@ class SocialAuthPlugin(BasePlugin):
 
     def external_refresh(
         self, data: dict, request: WSGIRequest, previous_value
-    ) -> RefreshToken:
+    ) -> ExternalAccessTokens:
         # utilize existing code
         # create an object that can have arbitrary attrs, refer to
         # https://stackoverflow.com/questions/2280334/shortest-way-of-creating-an-object-with-arbitrary-attributes-in-python
@@ -231,13 +231,19 @@ class SocialAuthPlugin(BasePlugin):
         payload = RefreshToken.clean_refresh_token(refresh_token)
 
         # None when we got refresh_token from cookie.
+        csrf_token = None
         if not data.get(refresh_token_code):
             csrf_token = data.get(refresh_token_code)
             RefreshToken.clean_csrf_token(csrf_token, payload)
 
         user = RefreshToken.get_user(payload)
         token = create_access_token(user)
-        return RefreshToken(errors=[], user=user, token=token)
+        return ExternalAccessTokens(
+            token=token,
+            refresh_token=refresh_token,
+            csrf_token=csrf_token,
+            user=user
+        )
 
     def external_verify(
         self, data: dict, request: WSGIRequest, previous_value
