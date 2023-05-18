@@ -199,7 +199,7 @@ class SocialAuthPlugin(BasePlugin):
 
     def external_refresh(
         self, data: dict, request: WSGIRequest, previous_value
-    ) -> ExternalAccessTokens:
+    ) -> RefreshToken:
         # utilize existing code
         # create an object that can have arbitrary attrs, refer to
         # https://stackoverflow.com/questions/2280334/shortest-way-of-creating-an-object-with-arbitrary-attributes-in-python
@@ -223,7 +223,10 @@ class SocialAuthPlugin(BasePlugin):
         #   refreshToken: token
         # });
         # return tokenRefresh({ variables: { input, pluginId: authPlugin } }).then(...)
-        refresh_token_code = 'refresh_token'
+        # refresh_token_code = 'refresh_token'
+
+        # by debug, it's `refreshToken` instead of `refresh_token`
+        refresh_token_code = 'refreshToken'
         refresh_token = data.get(refresh_token_code) or refresh_token
         payload = RefreshToken.clean_refresh_token(refresh_token)
 
